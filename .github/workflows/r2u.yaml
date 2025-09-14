@@ -36,8 +36,8 @@ jobs:
         run: R -q -e 'install.packages("ctv")'
 
       - name: Convert ctv File to html
-        # one bit of shell trickery inside $() tries to find the one .md file containing 'name: ...'
-        #run: R -q -e 'ctv::ctv2html("'$(grep -l "^name: " *.md)'")'
-        run: grep -l "^name: " *.md
+        run: R -q -e 'ctv::ctv2html("Finance.md")'
 
+      - name: List html
+        run: ls -l *.html
         
