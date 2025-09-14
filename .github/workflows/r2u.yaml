@@ -19,9 +19,9 @@ jobs:
       - name: SessionInfo
         run: R -q -e 'sessionInfo()'
         
-      #- name: System Dependencies
-      #  # can be used to install e.g. cmake or other build dependencies
-      #  run: apt update -qq && apt install --yes --no-install-recommends cmake git
+      - name: System Dependencies
+        # can be used to install e.g. cmake or other build dependencies
+        run: apt update -qq && apt install --yes --no-install-recommends pandoc
 
       #- name: Package Dependencies
       #  run: R -q -e 'remotes::install_deps(".", dependencies=TRUE)'
