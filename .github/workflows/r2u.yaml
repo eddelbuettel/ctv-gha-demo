@@ -33,7 +33,7 @@ jobs:
       #  run: R CMD check --no-vignettes --no-manual $(ls -1tr *.tar.gz | tail -1)
 
       - name: Install ctv Package
-        run: R -q -e 'install.packages("ctv")'
+        run: R -q -e 'install.packages(c("ctv", "knitr"))'
 
       - name: Convert ctv File to html
         run: R -q -e 'ctv::ctv2html("Finance.md")'
