@@ -36,7 +36,7 @@ jobs:
         run: R -q -e 'install.packages("ctv")'
 
       - name: Convert ctv File to html
-        # one bit of shell trickery inside `` tries to find the one .md file containing 'name: ...'
-        run: 'ctv::ctv2html("'`grep -l "^name: " *.md`'")'
+        # one bit of shell trickery inside $() tries to find the one .md file containing 'name: ...'
+        run: R -q -e 'ctv::ctv2html("'$(grep -l "^name: " *.md)'")'
 
         
