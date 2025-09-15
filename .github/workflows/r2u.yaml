@@ -9,16 +9,16 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    
+
     container:
       image: rocker/r2u:latest
-      
+
     steps:
       - uses: actions/checkout@v5
-        
+
       - name: SessionInfo
         run: R -q -e 'sessionInfo()'
-        
+
       - name: System Dependencies
         # can be used to install e.g. cmake or other build dependencies
         run: apt update -qq && apt install --yes --no-install-recommends pandoc
@@ -31,13 +31,15 @@ jobs:
 
       #- name: Check Package
       #  run: R CMD check --no-vignettes --no-manual $(ls -1tr *.tar.gz | tail -1)
-
+      
       - name: Install ctv Package Dependencies
         run: R -q -e 'install.packages(c("ctv", "knitr", "rmarkdown"))'
 
-      - name: Convert ctv File(s) to html
-        run: grep -l 'name: ' *.md | xargs Rscript -e 'res <- sapply(commandArgs(TRUE), ctv::ctv2html)'
+      #- name: Convert ctv File(s) to html
+      #  run: grep -l '^name: ' *.md | xargs Rscript -e 'res <- sapply(commandArgs(TRUE), ctv::ctv2html)'
 
+      - name: Debug
+        run: grep -l '^name: ' *.md
+      
       - name: List html Files
         run: ls -l *.html
-        
