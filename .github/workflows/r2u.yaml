@@ -32,12 +32,12 @@ jobs:
       #- name: Check Package
       #  run: R CMD check --no-vignettes --no-manual $(ls -1tr *.tar.gz | tail -1)
 
-      - name: Install ctv Package
+      - name: Install ctv Package Dependencies
         run: R -q -e 'install.packages(c("ctv", "knitr", "rmarkdown"))'
 
-      - name: Convert ctv File to html
-        run: R -q -e 'ctv::ctv2html("Finance.md")'
+      - name: Convert ctv File(s) to html
+        run: grep -l 'name: ' *.md | xargs Rscript -e 'res <- sapply(commandArgs(TRUE), ctv::ctv2html)'
 
-      - name: List html
+      - name: List html Files
         run: ls -l *.html
         
