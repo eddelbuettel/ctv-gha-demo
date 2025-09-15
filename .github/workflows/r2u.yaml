@@ -39,7 +39,9 @@ jobs:
       #  run: grep -l '^name: ' *.md | xargs Rscript -e 'res <- sapply(commandArgs(TRUE), ctv::ctv2html)'
 
       - name: Debug
-        run: grep -l '^name: ' *.md
+        run: |
+          shopt -s globstar
+          grep -l '^name: ' *.md
       
       - name: List html Files
         run: ls -l *.html
