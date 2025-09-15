@@ -31,21 +31,9 @@ jobs:
 
       #- name: Check Package
       #  run: R CMD check --no-vignettes --no-manual $(ls -1tr *.tar.gz | tail -1)
-      
+
       - name: Install ctv Package Dependencies
         run: R -q -e 'install.packages(c("ctv", "knitr", "rmarkdown"))'
 
-      # - name: Convert ctv File(s) to html
-      #   shell: bash
-      #   working-directory: ${{ github.workspace }}
-      #   run: |
-      #     shopt -s globstar
-      #     ls -l
-      #     ls -l *.md
-      #     grep -l '^name: ' *.md
-
       - name: Convert ctv File(s) to html
-        run: Rscript -e 'print(dir(pattern="\\.md"))'
-
-      - name: List html Files
-        run: ls -l *.html
+        run: Rscript -e 'sapply(dir(pattern="\\.md"), ctv::ctv2html)'
