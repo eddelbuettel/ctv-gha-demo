@@ -35,13 +35,11 @@ jobs:
       - name: Install ctv Package Dependencies
         run: R -q -e 'install.packages(c("ctv", "knitr", "rmarkdown"))'
 
-      #- name: Convert ctv File(s) to html
-      #  run: grep -l '^name: ' *.md | xargs Rscript -e 'res <- sapply(commandArgs(TRUE), ctv::ctv2html)'
-
-      - name: Debug
+      - name: Convert ctv File(s) to html
+        shell: bash
         run: |
           shopt -s globstar
-          grep -l '^name: ' *.md
+          grep -l '^name: ' '*.md'
       
       - name: List html Files
         run: ls -l *.html
