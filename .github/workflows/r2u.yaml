@@ -49,5 +49,5 @@ jobs:
           if (!file.exists(md)) md <- setdiff(Sys.glob("*.md"), "README.md")
           if (length(md) > 1L) md <- md[1L]
           cat("** Testing file", md, "\n")
-          rc <- length(md) == 1L && file.exists(md) && FALSE
+          rc <- length(md) == 1L && file.exists(md)
           q("no", rc == FALSE)
