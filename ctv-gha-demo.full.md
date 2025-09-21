@@ -11,6 +11,10 @@ A core package: `r pkg("Rcpp", priority = "core")`.
 
 A standard package: `r pkg("RcppArmadillo")`.
 
+An archived package: `r pkg("RcppOctave")` but available on GitHub at `r github("cran/RcppOctave")`.
+
+A unavailable package: `r pkg("RcppPython")` with unavailable GitHub link `r github("cran/RcppPython")`.
+
 
 ### Links
 - R Project correct link: [R-project.org](https://www.R-project.org/)
