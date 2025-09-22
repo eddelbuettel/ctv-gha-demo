@@ -38,16 +38,32 @@ jobs:
         shell: Rscript {0}
         run: install.packages(c("ctv", "knitr", "rmarkdown"))
 
-      - name: Convert ctv File(s) to html
-        shell: Rscript {0}
-        run: sapply(dir(pattern="\\.md"), ctv::ctv2html)
-
-      - name: Run an existence test for main .md file
+      - name: Set File Name
         shell: Rscript {0}
         run: |
           md <- paste0(basename(getwd()), ".md")
           if (!file.exists(md)) md <- setdiff(Sys.glob("*.md"), "README.md")
           if (length(md) > 1L) md <- md[1L]
-          cat("** Testing file", md, "\n")
-          ok <- length(md) == 1L && file.exists(md)
-          q("no", status = as.integer(!ok))
+          cat(paste0("MD=", md, "\n"), file=Sys.getenv("GITHUB_ENV"), append=TRUE)
+
+      - name: Run an existence test for main .md file
+        shell: Rscript {0}
+        run: |
+          ok <- file.exists(Sys.getenv("MD"))
+          # TRUE is success and returned as zero
+          q("no", status = as.integer(!ok))  
+          
+      - name: Convert ctv File from md to html
+        shell: Rscript {0}
+        run: ctv::ctv2html(Sys.getenv("MD"))
+
+      - name: Run package check on
+        shell: Rscript {0}
+        run: |
+          res <- ctv::check_ctv_packages(Sys.getenv("MD"))
+          res <- Filter(length, res)
+          str(res)
+          # Zero packages to adjust is success; zero is shell success
+          # Any non-zero number is failure and 'work to do'
+          q("no", status = as.integer(sum(lengths(res))))  
+          
