@@ -20,50 +20,65 @@ jobs:
         shell: Rscript {0}
         run: sessionInfo()
 
-      - name: System Dependencies
+      - name: System dependencies
         # can be used to install e.g. cmake or other build dependencies
         run: apt update -qq && apt install --yes --no-install-recommends pandoc
 
-      #- name: Package Dependencies
-      #  shell: Rscript {0}
-      #  run: remotes::install_deps(".", dependencies=TRUE)
-
-      #- name: Build Package
-      #  run: R CMD build --no-build-vignettes --no-manual .
-
-      #- name: Check Package
-      #  run: R CMD check --no-vignettes --no-manual $(ls -1tr *.tar.gz | tail -1)
-
-      - name: Install ctv Package Dependencies
+      - name: Install ctv package and dependencies
         shell: Rscript {0}
-        run: install.packages(c("ctv", "knitr", "rmarkdown"))
+        run: install.packages(c("ctv", "knitr", "rmarkdown", "RCurl"))
 
-      - name: Set File Name
+      - name: Query and set name of main .md file
         shell: Rscript {0}
         run: |
           md <- paste0(basename(getwd()), ".md")
           if (!file.exists(md)) md <- setdiff(Sys.glob("*.md"), "README.md")
           if (length(md) > 1L) md <- md[1L]
-          cat(paste0("MD=", md, "\n"), file=Sys.getenv("GITHUB_ENV"), append=TRUE)
+          cat(paste0("MD=", md, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
 
-      - name: Run an existence test for main .md file
+      - name: Run existence test for main .md file
         shell: Rscript {0}
         run: |
           ok <- file.exists(Sys.getenv("MD"))
-          # TRUE is success and returned as zero
-          q("no", status = as.integer(!ok))  
+          # TRUE is success and returned as status zero
+          q("no", status = as.integer(!ok))
           
-      - name: Convert ctv File from md to html
-        shell: Rscript {0}
-        run: ctv::ctv2html(Sys.getenv("MD"))
-
-      - name: Run package check on
+      - name: Check that .md file can be read as ctv
         shell: Rscript {0}
         run: |
-          res <- ctv::check_ctv_packages(Sys.getenv("MD"))
-          res <- Filter(length, res)
-          str(res)
-          # Zero packages to adjust is success; zero is shell success
-          # Any non-zero number is failure and 'work to do'
-          q("no", status = as.integer(sum(lengths(res))))  
+          ctv <- try(ctv::read.ctv(Sys.getenv("MD")))
+          ok <- inherits(ctv, "ctv")
+          if (ok) cat(paste0("CTV=", ctv$name, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          q("no", status = as.integer(!ok))
           
+      - name: Convert .md file to .html
+        shell: Rscript {0}
+        run: |
+          html <- ctv::ctv2html(Sys.getenv("MD"))
+          ok <- is.character(html)
+          q("no", status = as.integer(!ok))
+
+      - name: Check for unavailable or archived packages
+        shell: Rscript {0}
+        run: |
+          chck <- ctv::check_ctv_packages(Sys.getenv("MD"))
+          unavailable <- chck[[3]]
+          archived <- chck[[4]]
+          cran_ctv <- try(ctv::ctv(Sys.getenv("CTV")), silent = TRUE)
+          if (!inherits(cran_ctv, "try-error")) archived <- setdiff(archived, cran_ctv$archived)
+          ok <- c(length(unavailable), length(archived)) == 0L
+          if (!ok[1]) cat(sprintf("Packages unavailable on CRAN: %s\n", paste(unavailable, collapse = ", ")))
+          if (!ok[2]) cat(sprintf("Added packages archived on CRAN: %s\n", paste(archived, collapse = ", ")))
+          q("no", status = as.integer(any(!ok)))
+          
+      - name: Check for unavailable links
+        shell: Rscript {0}
+        run: |
+          ctv <- ctv::read.ctv(Sys.getenv("MD"))
+          links <- unlist(ctv[c("links", "otherlinks")])
+          urls <- sub(".*href=\"(.*)\".*", "\\1", links)
+          urls <- urls[!RCurl::url.exists(urls)]
+          ok <- length(urls) == 0L
+          if (!ok) cat(sprintf("Unavailable links:\n%s\n", paste(urls, collapse = "\n")))
+          q("no", status = as.integer(!ok))
+
