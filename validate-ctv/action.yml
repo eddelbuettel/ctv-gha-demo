@@ -2,6 +2,7 @@ name: Validate CRAN Task View
 description: Validate the md file in a GitHub repository for a CRAN Task View
 
 runs:
+  using: 'composite'
   steps:
     - uses: actions/checkout@v5
 
