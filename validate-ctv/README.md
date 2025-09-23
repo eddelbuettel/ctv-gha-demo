@@ -31,6 +31,8 @@ name: Validate task view
 jobs:
   validate-ctv:
     runs-on: ubuntu-latest
+    container:
+      image: rocker/r2u:latest
     steps:
       - uses: eddelbuettel/ctv-gha-demo/validate-ctv@master
 ```
