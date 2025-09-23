@@ -32,7 +32,7 @@ jobs:
   validate-ctv:
     runs-on: ubuntu-latest
     steps:
-      - uses: eddelbuettel/ctv-gha-demo/validate-ctv@main
+      - uses: eddelbuettel/ctv-gha-demo/validate-ctv@master
 ```
 
 Replace `<TaskViewName>` with the name of the task view. Typically, the task view
