@@ -1,6 +1,5 @@
 name: Validate CRAN Task View
 description: Validate the md file in a GitHub repository for a CRAN Task View
-author: 'CRAN Task View Initiative'
 
 on:
   push:
