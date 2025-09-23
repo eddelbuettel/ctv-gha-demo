@@ -14,4 +14,3 @@ A standard package: `r pkg("RcppArmadillo")`.
 
 ### Links
 - R Project correct link: [R-project.org](https://www.R-project.org/)
-- R Project broken link: [R-project.com](https://www.R-project.com/)
