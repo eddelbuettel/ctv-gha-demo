@@ -10,6 +10,7 @@ runs:
       run: sessionInfo()
 
     - name: System dependencies
+      shell: bash
       # can be used to install e.g. cmake or other build dependencies
       run: apt update -qq && apt install --yes --no-install-recommends pandoc
 
