@@ -1,0 +1,85 @@
+name: Validate CRAN Task View
+description: Validate the md file in a GitHub repository for a CRAN Task View
+
+on:
+  push:
+  pull_request:
+  release:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    container:
+      image: rocker/r2u:latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: SessionInfo
+        shell: Rscript {0}
+        run: sessionInfo()
+
+      - name: System dependencies
+        # can be used to install e.g. cmake or other build dependencies
+        run: apt update -qq && apt install --yes --no-install-recommends pandoc
+
+      - name: Install ctv package and dependencies
+        shell: Rscript {0}
+        run: install.packages(c("ctv", "knitr", "rmarkdown", "RCurl"))
+
+      - name: Query and set name of main .md file
+        shell: Rscript {0}
+        run: |
+          md <- paste0(basename(getwd()), ".md")
+          if (!file.exists(md)) md <- setdiff(Sys.glob("*.md"), "README.md")
+          if (length(md) > 1L) md <- md[1L]
+          cat(paste0("MD=", md, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+
+      - name: Run existence test for main .md file
+        shell: Rscript {0}
+        run: |
+          ok <- file.exists(Sys.getenv("MD"))
+          # TRUE is success and returned as status zero
+          q("no", status = as.integer(!ok))
+          
+      - name: Check that .md file can be read as ctv
+        shell: Rscript {0}
+        run: |
+          ctv <- try(ctv::read.ctv(Sys.getenv("MD")))
+          ok <- inherits(ctv, "ctv")
+          if (ok) cat(paste0("CTV=", ctv$name, "\n"), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          q("no", status = as.integer(!ok))
+          
+      - name: Convert .md file to .html
+        shell: Rscript {0}
+        run: |
+          html <- ctv::ctv2html(Sys.getenv("MD"))
+          ok <- is.character(html)
+          q("no", status = as.integer(!ok))
+
+      - name: Check for unavailable or archived packages
+        shell: Rscript {0}
+        run: |
+          chck <- ctv::check_ctv_packages(Sys.getenv("MD"))
+          unavailable <- chck[[3]]
+          archived <- chck[[4]]
+          cran_ctv <- try(ctv::ctv(Sys.getenv("CTV")), silent = TRUE)
+          if (!inherits(cran_ctv, "try-error")) archived <- setdiff(archived, cran_ctv$archived)
+          ok <- c(length(unavailable), length(archived)) == 0L
+          if (!ok[1]) cat(sprintf("Packages unavailable on CRAN: %s\n", paste(unavailable, collapse = ", ")))
+          if (!ok[2]) cat(sprintf("Added packages archived on CRAN: %s\n", paste(archived, collapse = ", ")))
+          q("no", status = as.integer(any(!ok)))
+          
+      - name: Check for unavailable links
+        shell: Rscript {0}
+        run: |
+          ctv <- ctv::read.ctv(Sys.getenv("MD"))
+          links <- unlist(ctv[c("links", "otherlinks")])
+          urls <- sub(".*href=\"(.*)\".*", "\\1", links)
+          urls <- urls[!RCurl::url.exists(urls)]
+          ok <- length(urls) == 0L
+          if (!ok) cat(sprintf("Unavailable links:\n%s\n", paste(urls, collapse = "\n")))
+          q("no", status = as.integer(!ok))
+
